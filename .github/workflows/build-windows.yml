@@ -1,0 +1,31 @@
+name: Build Zed for Windows
+
+# Allows you to run this workflow manually from the Actions tab
+on: [workflow_dispatch] 
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Enable long paths in Windows (Required for Zed)
+        run: |
+          git config --system core.longpaths true
+          New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
+        shell: powershell
+
+      - name: Build Zed (Release)
+        run: cargo build --release
+
+      # This step packages the resulting .exe so you can download it from GitHub
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zed-windows
+          path: target/release/zed.exe # Adjust this path if the output name is different
